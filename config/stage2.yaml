@@ -1,0 +1,214 @@
+model: runs/stage1/final
+max_seq_length: 32768
+keep_best_checkpoints: 3
+pooling_mode: cls
+grad_cache_chunk_tokens: 131072
+
+
+dataset_mixture:
+###################################
+######## English Retrieval ########
+###################################
+- sampling_weight: 0.5406
+  datasets:
+  # lightonai filtered-en: msmarco, nq, hotpotqa, fever, squadv2, trivia, miracl, mldr (10 neg)
+  - path: data/stage2/lightonai/search/fever_en.parquet
+    query_prefix: "Instruct: Given a claim, retrieve documents that support or refute the claim\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/lightonai/search/hotpotqa_en.parquet
+    query_prefix: "Instruct: Given a multi-hop question, retrieve documents that can help answer the question\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/lightonai/search/miracl_en.parquet
+    query_prefix: "Instruct: Given a question, retrieve Wikipedia passages that answer the question\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/lightonai/search/mldr_en.parquet
+    query_prefix: "Instruct: Given a question, retrieve Wikipedia articles that answer the question\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/lightonai/search/msmarco_en.parquet
+    query_prefix: "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/lightonai/search/nq_en.parquet
+    query_prefix: "Instruct: Given a question, retrieve Wikipedia passages that answer the question\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/lightonai/search/squadv2_en.parquet
+    query_prefix: "Instruct: Given a question, retrieve Wikipedia passages that answer the question\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/lightonai/search/trivia_en.parquet
+    query_prefix: "Instruct: Given a question, retrieve Wikipedia passages that answer the question\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  # F2LLM v1: title_abstract (24 neg), title_citation (24 neg), abstract_citation (10 neg)
+  - path: data/stage2/s2orc/search/abstract_citation.parquet
+    query_prefix: "Instruct: Given a paper's abstract, retrieve abstract from papers that cite it\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/s2orc/search/title_abstract.parquet
+    query_prefix: "Instruct: Given the title of a paper, retrieve the corresponding abstract\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/s2orc/search/title_citation.parquet
+    query_prefix: "Instruct: Retrieve papers that cite the given title\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  # F2LLM-v2 search: pubmedqa, bioasq, medquad (10 neg); dbpedia (24 neg)
+  - path: data/stage2/f2llm-v2/search/bioasq.parquet
+    query_prefix: "Instruct: Given a question, retrieve relevant passages that can help answer the question\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/f2llm-v2/search/dbpedia.parquet
+    query_prefix: "Instruct: Given a query, retrieve relevant entity descriptions from DBPedia\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/f2llm-v2/search/medquad.parquet
+    query_prefix: "Instruct: Retrieve passages that can answer the query\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  - path: data/stage2/f2llm-v2/search/pubmedqa.parquet
+    query_prefix: "Instruct: Given a question, retrieve paper abstracts from PubMed that can answer it\nQuery: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+################################
+######## Code Retrieval ########
+################################
+- sampling_weight: 0.1200
+  datasets:
+  # F2LLM-v2 ocgi + ocgi_part2: instruction -> code (10 neg)
+  - path: data/stage2/f2llm-v2/search/ocgi.parquet
+    query_prefix: ""  # We use the instructions included in the original dataset.
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  # F2LLM-v2 xcodeeval_nl2code: Codeforces problem -> solution, 17 languages (xcodeeval_nl2code@<lang>) (24 neg)
+  - path: data/stage2/f2llm-v2/search/xcodeeval_nl2code@*.parquet
+    query_prefix: ""  # We use the instructions included in the original dataset.
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+############################
+######## Similarity ########
+############################
+- sampling_weight: 0.1411
+  datasets:
+  # nomic supervised: nli_simcse_10negs (10 neg, n1 = contradiction)
+  - path: data/stage2/nomic-sft/similarity/nli_simcse_10negs.parquet
+    query_prefix: "Instruct: Given a premise, retrieve a hypothesis that is entailed by the premise\nQuery: "
+    document_prefix: "Instruct: Given a premise, retrieve a hypothesis that is entailed by the premise\nQuery: "
+    in_batch: false
+    infonce_scale: 20.0
+  # open-synthetic-embeddings STS: sts_llama70b, sts_llama8b (1 neg)
+  - path: data/stage2/open-synthetic-embeddings/similarity/*.parquet
+    query_prefix: "Instruct: Retrieve semantically similar text.\nQuery: "
+    document_prefix: "Instruct: Retrieve semantically similar text.\nQuery: "
+    in_batch: false
+    infonce_scale: 20.0
+  # F2LLM-v2 qqp, pawsx_en (paraphrases) (24 neg)
+  - path: data/stage2/f2llm-v2/similarity/qqp.parquet
+    query_prefix: "Instruct: Retrieve duplicate questions from Quora forum\nQuery: "
+    document_prefix: "Instruct: Retrieve duplicate questions from Quora forum\nQuery: "
+    in_batch: false
+    infonce_scale: 20.0
+  - path: data/stage2/f2llm-v2/similarity/pawsx_en.parquet
+    query_prefix: "Instruct: Retrieve sentences that are semantically equivalent to the given one\nQuery: "
+    document_prefix: "Instruct: Retrieve sentences that are semantically equivalent to the given one\nQuery: "
+    in_batch: false
+    infonce_scale: 20.0
+#############################################
+######## Classification & Clustering ########
+#############################################
+- sampling_weight: 0.1984
+  datasets:
+  # nemotron synthetic labels: text -> label phrase (1-4 neg)
+  - path: data/stage2/nemotron-synthetic-classification/classification/*.parquet
+    query_prefix: ""  # We use the instructions included in the original dataset.
+    document_prefix: "Label: "
+    in_batch: false
+    infonce_scale: 20.0
+  # jigsaw: text -> toxic / not toxic (1 neg)
+  - path: data/stage2/jigsaw-toxic-comment/classification/*.parquet
+    query_prefix: "Instruct: Classify the given comments as either toxic or not toxic\nQuery: "
+    document_prefix: "Label: "
+    in_batch: false
+    infonce_scale: 20.0
+  # measuring-hate-speech: text -> toxic / not toxic (1 neg)
+  - path: data/stage2/measuring-hate-speech/classification/*.parquet
+    query_prefix: "Instruct: Classify the given comments as either toxic or not toxic\nQuery: "
+    document_prefix: "Label: "
+    in_batch: false
+    infonce_scale: 20.0
+  # F2LLM-v2 amazon_polarity: review -> positive / negative (1 neg)
+  - path: data/stage2/f2llm-v2/classification/*.parquet
+    query_prefix: "Instruct: Classify Amazon reviews into positive or negative sentiment\nQuery: "
+    document_prefix: "Label: "
+    in_batch: false
+    infonce_scale: 20.0
+  # nemotron synthetic labels: text -> same-label text (2-8 neg)
+  - path: data/stage2/nemotron-synthetic-classification/clustering/*.parquet
+    query_prefix: ""     # We use the instructions included in the original dataset.
+    document_prefix: ""  # We use the instructions included in the original dataset.
+    in_batch: false
+    infonce_scale: 20.0
+source_alpha: 0.5
+
+
+training_args:
+  bf16: true
+  dataloader_num_workers: 16
+  dataloader_drop_last: true
+  batch_sampler: no_duplicates
+  per_device_train_batch_size: 32  # x8 GPUs = 256
+  per_device_eval_batch_size: 256
+  max_steps: 10000
+  learning_rate: 5.0e-6
+  warmup_steps: 0.05
+  lr_scheduler_type: linear
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  adam_beta2: 0.98
+  logging_steps: 20
+  eval_strategy: steps
+  eval_steps: 500
+  save_strategy: steps
+  save_steps: 500
+  output_dir: runs/stage2
+  report_to: [tensorboard]
+  seed: 1
+
+
+eval_prompts:
+  query: "Instruct: Given a question, retrieve passages that answer the question\nQuery: "
+  document: ""
+  "ArguAna-query": "Instruct: Given a claim, find documents that refute the claim\nQuery: "
+  "ClimateFEVERHardNegatives-query": "Instruct: Given a claim about climate change, retrieve documents that support or refute the claim\nQuery: "
+  "CQADupstackGamingRetrieval-query": "Instruct: Given a question, retrieve detailed question descriptions from Stackexchange that are duplicates to the given question\nQuery: "
+  "CQADupstackUnixRetrieval-query": "Instruct: Given a question, retrieve detailed question descriptions from Stackexchange that are duplicates to the given question\nQuery: "
+  "FEVERHardNegatives-query": "Instruct: Given a claim, retrieve documents that support or refute the claim\nQuery: "
+  "FiQA2018-query": "Instruct: Given a financial question, retrieve user replies that best answer the question\nQuery: "
+  "HotpotQAHardNegatives-query": "Instruct: Given a multi-hop question, retrieve documents that can help answer the question\nQuery: "
+  "SCIDOCS-query": "Instruct: Given a scientific paper title, retrieve paper abstracts that are cited by the given paper\nQuery: "
+  "Touche2020Retrieval.v3-query": "Instruct: Given a question, retrieve detailed and persuasive arguments that answer the question\nQuery: "
+  "TRECCOVID-query": "Instruct: Given a query on COVID-19, retrieve documents that answer the query\nQuery: "
+  "AppsRetrieval-query": "Instruct: Retrieve the most relevant code snippet for the given query.\nQuery: "
+  "CodeSearchNetCCRetrieval-query": "Instruct: Retrieve the most relevant code snippet for the given code snippet.\nQuery: "
+  "CosQA-query": "Instruct: Retrieve the most relevant code snippet for the given query.\nQuery: "

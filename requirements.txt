@@ -1,0 +1,19 @@
+# Installed 2026-09-09 after torch==2.14.0+cu130. flash-attn is installed separately from a prebuilt wheel.
+transformers==5.16.1
+sentence-transformers==6.0.1
+mteb==2.20.11
+datasets==5.0.1
+accelerate==1.14.0
+huggingface-hub==1.30.0
+tokenizers==0.23.2
+safetensors==0.8.0
+einops==0.8.2
+numpy==2.5.3
+pandas==3.0.5
+pyarrow==25.0.1
+scikit-learn==1.9.0
+scipy==1.18.1
+tqdm==4.70.0
+hf-transfer==0.1.9
+hf-xet==1.6.0
+tensorboard==2.21.0

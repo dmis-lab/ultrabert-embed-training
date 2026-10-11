@@ -1,0 +1,55 @@
+model: dmis-lab/UltraBERT-150M
+max_seq_length: 2048
+pooling_mode: cls
+grad_cache_chunk_tokens: 131072
+
+
+dataset_mixture:
+- datasets:
+  # lightonai pre-training-curated search (21 subsets, w/o mtp)
+  - path: data/stage1/lightonai/search/*.parquet
+    query_prefix: "Query: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+  # lightonai pre-training-curated paraphrase: wikianswers, altlex, quora
+  - path: data/stage1/lightonai/classification/*.parquet
+    query_prefix: "Query: "
+    document_prefix: "Query: "
+    in_batch: true
+    infonce_scale: 50.0
+  # cornstack 6 languages (cornstack@<lang>_<dtc|ctd|ctc|>)
+  - path: data/stage1/cornstack/search/*.parquet
+    query_prefix: "Query: "
+    document_prefix: ""
+    in_batch: true
+    infonce_scale: 50.0
+source_alpha: 0.5
+
+
+training_args:
+  bf16: true
+  dataloader_num_workers: 16
+  dataloader_drop_last: true
+  per_device_train_batch_size: 2048  # x8 GPUs = 16384
+  per_device_eval_batch_size: 512
+  max_steps: 33000
+  learning_rate: 5.0e-5
+  warmup_steps: 1000
+  lr_scheduler_type: warmup_stable_decay
+  lr_scheduler_kwargs: {num_decay_steps: 3000, decay_type: linear}
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  adam_beta2: 0.98
+  logging_steps: 20
+  eval_strategy: steps
+  eval_steps: 1000
+  save_strategy: steps
+  save_steps: 5000
+  output_dir: runs/stage1
+  report_to: [tensorboard]
+  seed: 0
+
+
+eval_prompts:
+  query: "Query: "
